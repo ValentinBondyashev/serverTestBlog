@@ -9,6 +9,7 @@ const UsersSchema = new Schema({
     nickName: String,
     hash: String,
     salt: String,
+    role: { type: String, default: "user" },
 });
 
 UsersSchema.methods.setPassword = function(password) {

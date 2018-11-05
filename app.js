@@ -31,6 +31,7 @@ require('./db');
 require('./Models/Users');
 require('./Models/Tasks');
 require('./Models/Message');
+require('./Models/Post');
 require('./config/passport');
 app.use(require('./routes'));
 

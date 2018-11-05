@@ -3,7 +3,7 @@ const Users = mongoose.model('Users');
 const Joi = require('joi');
 
 const schema = Joi.object().keys({
-    nickName: Joi.string().alphanum().min(3).max(30).required(),
+    nickName: Joi.string().alphanum().min(3).max(30),
     password: Joi.string().regex(/^[a-zA-Z0-9]{3,30}$/),
     email: Joi.string().email({ minDomainAtoms: 2 })
 });
@@ -14,7 +14,7 @@ function checkUser () {
 
         const existingUser = await Users.findOne({email});
 
-        if(email === existingUser.email){
+        if(email === existingUser['email']){
             return res.status(422).json({
                 errors: {
                     message: 'user with same email has already been created',
