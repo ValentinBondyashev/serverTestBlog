@@ -1,4 +1,3 @@
 module.exports = {
-    UserMiddleware: require('./checkUser'),
-    CheckRoleMiddleware: require('./checkRole')
+    PermissionsMiddleware: require('./permissions')
 };

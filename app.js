@@ -3,37 +3,55 @@ const path = require('path');
 const bodyParser = require('body-parser');
 const session = require('express-session');
 const cors = require('cors');
-
 const errorHandler = require('errorhandler');
+const mongoose = require('mongoose');
+
+const MongoStore = require('connect-mongo')(session);
 
 //Configure isProduction variable
 const isProduction = process.env.NODE_ENV === 'production';
 
-//Initiate our app
+//settings database
+require('./db');
+
+//Initiate app
 const app = express();
 
-//Configure our app
+//sessions
+app.use(
+    session({
+        secret: 'passport-tutorial',
+        resave: false,
+        saveUninitialized: true,
+        store: new MongoStore({
+            mongooseConnection: mongoose.connection,
+        })
+    })
+);
+
+//Configure app
 app.use(cors());
 app.use(require('morgan')('dev'));
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 app.use(express.static(path.join(__dirname, 'public')));
-app.use(session({ secret: 'passport-tutorial', cookie: { maxAge: 60000 }, resave: false, saveUninitialized: false }));
-if(!isProduction) {
+app.use(express.static(path.join(__dirname, 'uploads')));
 
+if(!isProduction) {
     app.use(errorHandler());
 }
 
-//Configure Mongoose
-require('./db');
+//Models
+require('./Models');
 
 
-require('./Models/Users');
-require('./Models/Tasks');
-require('./Models/Message');
-require('./Models/Post');
+//passport config
 require('./config/passport');
+
+
+//Routes
 app.use(require('./routes'));
+
 
 //Error handlers & middlewares
 if(!isProduction) {
@@ -48,8 +66,8 @@ if(!isProduction) {
 
     });
 }
-app.use((err, req, res) => {
 
+app.use((err, req, res) => {
     res.status(err.status || 500);
     res.json({
         errors: {

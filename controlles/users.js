@@ -1,66 +1,50 @@
 const mongoose = require('mongoose');
 const passport = require('passport');
+const Joi = require('joi');
+
 const Users = mongoose.model('Users');
+const UserSchema = require('../validators/UserSchema');
 
 function createUser () {
-    return async (req, res, next) => {
-        const { body: { user } } = req;
-        if(!user.email) {
-            return res.status(422).json({
-                errors: {
-                    email: 'is required',
-                },
-            });
-        }
-        if(!user.password) {
-            return res.status(422).json({
-                errors: {
-                    password: 'is required',
-                },
-            });
-        }
+    return async (req, res) => {
+        Joi.validate(req.body.user, UserSchema.register, async (err, data) => {
+            if(!err){
+                const newUser = new Users(data);
 
-        const newUser = new Users(user);
+                newUser.setPassword(data.password);
 
-        newUser.setPassword(user.password);
-
-        const finalUser = await newUser.save();
-        return res.json({ user: finalUser.toAuthJSON() });
+                const finalUser = await newUser.save();
+                req.session.userId = finalUser._id;
+                req.session.userLogin = finalUser.email;
+                return res.json({ user: finalUser.toAuthJSON() });
+            }else {
+                res.status(400);
+                res.send(err);
+            }
+        });
     }
 }
 
 function login () {
-    return (req, res, next) => {
+    return (req, res) => {
         const { body: { user } } = req;
-        if(!user.email) {
-            return res.status(422).json({
-                errors: {
-                    email: 'is required',
-                },
-            });
-        }
+        Joi.validate(user, UserSchema.login, async() => {
+            return passport.authenticate('local', { session: false }, (err, passportUser, info) => {
+                if(err) {
+                    return next(err);
+                }
+                if(passportUser) {
+                    const user = passportUser;
+                    user.token = passportUser.generateJWT();
+                    req.session.cookie.userId = user._id;
+                    req.session.cookie.userLogin = user.email;
+                    console.log(req.session);
+                    return res.json({ user: user.toAuthJSON() });
+                }
 
-        if(!user.password) {
-            return res.status(422).json({
-                errors: {
-                    password: 'is required',
-                },
-            });
-        }
-
-        return passport.authenticate('local', { session: false }, (err, passportUser, info) => {
-            if(err) {
-                return next(err);
-            }
-
-            if(passportUser) {
-                const user = passportUser;
-                user.token = passportUser.generateJWT();
-                return res.json({ user: user.toAuthJSON() });
-            }
-
-            return status(400).info;
-        })(req, res, next);
+                return status(400).info;
+            })(req, res);
+        });
     }
 }
 

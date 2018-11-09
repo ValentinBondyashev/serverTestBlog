@@ -1,10 +1,13 @@
 const mongoose = require('mongoose');
 const Post = mongoose.model('Post');
 
-function getAllPosts () {
+function getPosts () {
     return async (req, res) => {
-        const posts = await Post.find({}) /*.skip(3).limit(1)*/;
-        return res.json({ posts })
+        const perPage = 5;
+        const { params: { page } } = req;
+        const countPosts = await Post.find({}).count();
+        const posts = await Post.find({}).skip((perPage * page) - perPage).limit(perPage);
+        return res.json({ posts, countPosts })
     }
 }
 
@@ -32,18 +35,19 @@ function deletePost () {
     }
 }
 
-function editPost () {
+function updatePost () {
     return async (req, res) => {
         const { body } = req;
-        const post = await Post.update({_id: body.id}, {post: body.post, dateCreated: new Date});
+        console.log(body);
+        const post = await Post.update({_id: body.postId}, {title: body.title, text: body.text});
         return res.json({ post: post });
     }
 }
 
 module.exports = {
-    getAllPosts,
+    getPosts,
     createPost,
     deletePost,
-    editPost,
+    updatePost,
     getPost
 };

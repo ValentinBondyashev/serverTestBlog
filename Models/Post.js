@@ -10,7 +10,11 @@ const PostSchema = new Schema({
     dateCreated: {
         type: Date,
         default: new Date
+    },
+    uploads: {
+        type: Schema.Types.ObjectId,
+        ref: 'File'
     }
 });
 
-mongoose.model('Post', PostSchema);
+module.exports = mongoose.model('Post', PostSchema);

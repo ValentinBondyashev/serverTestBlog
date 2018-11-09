@@ -1,20 +1,21 @@
 const router = require('express').Router();
 const { PostsController } = require('../../controlles');
 const auth = require('../../middleware/auth');
+const { PermissionsMiddleware } = require('../../middleware');
 
-/*get all posts*/
-router.get('/', auth.optional, PostsController.getAllPosts());
+/*get posts*/
+router.get('/:page', auth.optional, PostsController.getPosts());
 
 /*create post*/
 router.post('/post', auth.optional, PostsController.createPost());
 
-/*delete post*/
-router.get('/:id', auth.optional, PostsController.getPost());
+/*get single post*/
+router.get('/post/:id', auth.optional, PostsController.getPost());
 
 /*delete post*/
-router.delete('/:id', auth.optional, PostsController.deletePost());
+router.delete('/:id', auth.optional, PermissionsMiddleware.checkPermissions('delete'), PostsController.deletePost());
 
 /*edit post*/
-router.post('/update', auth.optional, PostsController.editPost());
+router.post('/update', auth.optional, PostsController.updatePost());
 
 module.exports = router;
